@@ -7,11 +7,85 @@ import { useCart } from '@/contexts/CartContext'
 import Button from '@/components/ui/Button'
 import Loading from '@/components/ui/Loading'
 
+// Trigger receipt (and optionally welcome) email after successful payment
+async function triggerReceiptEmail(orderNumber: string) {
+  try {
+    // Fetch purchase + customer + product info from Supabase
+    const { data: purchase } = await supabase
+      .from('bybisa_purchases')
+      .select(`
+        *,
+        bybisa_customers ( email, full_name ),
+        bybisa_products ( title, category )
+      `)
+      .eq('order_number', orderNumber)
+      .single()
+
+    if (!purchase) return
+
+    const customer = purchase.bybisa_customers as { email: string; full_name: string } | null
+    const product = purchase.bybisa_products as { title: string; category: string } | null
+    if (!customer?.email) return
+
+    // Build download URL
+    const downloadUrl = `${window.location.origin}/download?token=${purchase.download_token}`
+
+    // Check if this is their first purchase (for welcome email)
+    const { count: purchaseCount } = await supabase
+      .from('bybisa_purchases')
+      .select('*', { count: 'exact', head: true })
+      .eq('customer_id', purchase.customer_id)
+      .eq('status', 'paid')
+
+    const purchaseDate = new Date().toLocaleDateString('en-UG', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+
+    // Send receipt
+    await fetch('/api/emails/send-receipt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        customer_email: customer.email,
+        customer_name: customer.full_name || 'Entrepreneur',
+        order_number: purchase.order_number,
+        product_title: product?.title || 'Your Product',
+        amount: String(purchase.amount),
+        currency: purchase.currency || 'UGX',
+        payment_method: purchase.payment_method || 'PesaPal',
+        payment_reference: purchase.pesapal_tracking_id || '',
+        download_url: downloadUrl,
+        remaining_downloads: purchase.downloads_remaining ?? 5,
+        purchase_date: purchaseDate,
+      }),
+    })
+
+    // Send welcome email for first-time buyers
+    if ((purchaseCount ?? 0) <= 1) {
+      await fetch('/api/emails/send-welcome', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customer_email: customer.email,
+          customer_name: customer.full_name || 'Entrepreneur',
+          product_title: product?.title || 'Your Product',
+          product_type: product?.category || 'template',
+        }),
+      })
+    }
+  } catch (err) {
+    // Non-fatal: email errors should not break the payment flow
+    console.error('Email trigger failed:', err)
+  }
+}
+
 export default function PaymentCallback() {
   const [searchParams] = useSearchParams()
   const { clearCart } = useCart()
   const [status, setStatus] = useState<'loading' | 'success' | 'pending' | 'failed'>('loading')
-  const [purchases, setPurchases] = useState<any[]>([])
+  const [purchases, setPurchases] = useState([])
 
   const ref = searchParams.get('ref') || searchParams.get('pesapal_merchant_reference')
   const trackingId = searchParams.get('OrderTrackingId') || searchParams.get('pesapal_transaction_tracking_id')
@@ -23,7 +97,6 @@ export default function PaymentCallback() {
 
   async function handleCallback() {
     if (isPending) {
-      // Order created but PesaPal redirect failed
       await loadPurchases(ref)
       setStatus('pending')
       clearCart()
@@ -34,14 +107,16 @@ export default function PaymentCallback() {
       try {
         const token = await getAuthToken()
         const txStatus = await getTransactionStatus(token, trackingId)
-        
+
         if (txStatus.payment_status_description === 'Completed') {
-          // Update purchase to paid
           if (ref) {
             await supabase
               .from('bybisa_purchases')
               .update({ status: 'paid', pesapal_tracking_id: trackingId, payment_method: txStatus.payment_method })
               .eq('order_number', ref)
+
+            // Trigger receipt + welcome emails
+            await triggerReceiptEmail(ref)
           }
           await loadPurchases(ref)
           setStatus('success')
@@ -53,23 +128,22 @@ export default function PaymentCallback() {
           setStatus('pending')
           clearCart()
         }
-      } catch {
+      } catch (err) {
+        console.error('Callback error:', err)
         await loadPurchases(ref)
         setStatus('pending')
         clearCart()
       }
     } else if (ref) {
-      await loadPurchases(ref)
-      // Check if already paid
+      // No tracking ID â check DB status
       const { data } = await supabase
         .from('bybisa_purchases')
         .select('status')
         .eq('order_number', ref)
         .single()
       setStatus(data?.status === 'paid' ? 'success' : 'pending')
+      await loadPurchases(ref)
       clearCart()
-    } else {
-      setStatus('failed')
     }
   }
 
@@ -77,69 +151,89 @@ export default function PaymentCallback() {
     if (!orderRef) return
     const { data } = await supabase
       .from('bybisa_purchases')
-      .select('*, product:bybisa_products(title, slug, file_type)')
+      .select('*, bybisa_products(title, file_type)')
       .eq('order_number', orderRef)
-    setPurchases(data || [])
+    if (data) setPurchases(data as any)
   }
 
-  if (status === 'loading') return <Loading />
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loading />
+          <p className="mt-4 text-gray-600">Verifying your payment...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-      {status === 'success' && (
-        <>
-          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h1 className="font-heading text-3xl font-bold text-secondary mb-2">Payment Successful!</h1>
-          <p className="text-gray-500 mb-8">Your purchase is ready for download.</p>
-          
-          <div className="bg-white rounded-xl border border-warm-border p-6 text-left space-y-4 mb-8">
-            <h3 className="font-heading font-semibold text-secondary">Your Downloads</h3>
-            {purchases.map(p => (
-              <div key={p.id} className="flex items-center justify-between p-3 bg-warm-surface rounded-lg">
-                <div>
-                  <p className="font-medium text-secondary">{p.product?.title}</p>
-                  <p className="text-xs text-gray-500">Order: {p.order_number} &middot; {p.product?.file_type?.toUpperCase()}</p>
+    <div className="min-h-screen bg-[#F9F9F9] flex items-center justify-center px-4 py-16">
+      <div className="max-w-lg w-full bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        {/* Status Header */}
+        <div className={`p-8 text-center ${
+          status === 'success' ? 'bg-green-50' :
+          status === 'failed' ? 'bg-red-50' :
+          'bg-amber-50'
+        }`}>
+          {status === 'success' && <CheckCircle className="mx-auto w-16 h-16 text-green-500 mb-4" />}
+          {status === 'failed' && <XCircle className="mx-auto w-16 h-16 text-red-500 mb-4" />}
+          {status === 'pending' && <Clock className="mx-auto w-16 h-16 text-amber-500 mb-4" />}
+
+          <h1 className="text-2xl font-bold text-[#121212] mb-2">
+            {status === 'success' && 'Payment Confirmed! ð'}
+            {status === 'failed' && 'Payment Failed'}
+            {status === 'pending' && 'Payment Pending'}
+          </h1>
+          <p className="text-gray-600">
+            {status === 'success' && 'Your purchase is confirmed. A receipt has been sent to your email.'}
+            {status === 'failed' && 'Your payment was not successful. Please try again.'}
+            {status === 'pending' && 'Your payment is being processed. We will email you once confirmed.'}
+          </p>
+        </div>
+
+        {/* Purchases */}
+        {purchases.length > 0 && (
+          <div className="p-6 border-b border-gray-100">
+            <h2 className="font-semibold text-[#121212] mb-4">Your Purchase{purchases.length > 1 ? 's' : ''}</h2>
+            <div className="space-y-3">
+              {(purchases as any[]).map((purchase: any) => (
+                <div key={purchase.id} className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
+                  <div>
+                    <p className="font-medium text-[#121212] text-sm">{purchase.bybisa_products?.title}</p>
+                    <p className="text-xs text-gray-500">{purchase.order_number}</p>
+                  </div>
+                  {status === 'success' && purchase.download_token && (
+                    <Link
+                      to={`/download?token=${purchase.download_token}`}
+                      className="flex items-center gap-1.5 bg-[#C75B2B] text-white text-xs font-semibold px-4 py-2 rounded-full hover:bg-[#b34d21] transition-colors"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      Download
+                    </Link>
+                  )}
                 </div>
-                <Link to={`/download/${p.download_token}`}>
-                  <Button size="sm">
-                    <Download className="w-4 h-4" /> Download
-                  </Button>
-                </Link>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
+        )}
 
-          <p className="text-sm text-gray-500 mb-6">
-            A download link has also been sent to your email. You can download up to 5 times.
-          </p>
-        </>
-      )}
-
-      {status === 'pending' && (
-        <>
-          <Clock className="w-16 h-16 text-amber-500 mx-auto mb-4" />
-          <h1 className="font-heading text-3xl font-bold text-secondary mb-2">Payment Processing</h1>
-          <p className="text-gray-500 mb-8">
-            Your payment is being processed. You will receive an email with your download link once confirmed.
-          </p>
-          {purchases.length > 0 && (
-            <p className="text-sm text-gray-500 mb-4">Order Reference: {purchases[0]?.order_number}</p>
+        {/* Actions */}
+        <div className="p-6 flex flex-col gap-3">
+          {status === 'success' && (
+            <Link to="/my-purchases" className="flex items-center justify-center gap-2 w-full bg-[#121212] text-white font-semibold py-3 rounded-full hover:bg-gray-800 transition-colors">
+              View All My Purchases <ArrowRight className="w-4 h-4" />
+            </Link>
           )}
-        </>
-      )}
-
-      {status === 'failed' && (
-        <>
-          <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h1 className="font-heading text-3xl font-bold text-secondary mb-2">Payment Failed</h1>
-          <p className="text-gray-500 mb-8">Something went wrong with your payment. Please try again.</p>
-          <Link to="/cart"><Button>Try Again</Button></Link>
-        </>
-      )}
-
-      <div className="flex justify-center gap-4 mt-6">
-        <Link to="/shop"><Button variant="outline">Continue Shopping <ArrowRight className="w-4 h-4" /></Button></Link>
-        <Link to="/my-purchases"><Button variant="ghost">My Purchases</Button></Link>
+          {status === 'failed' && (
+            <Button onClick={() => window.history.back()} variant="primary" fullWidth>
+              Try Again
+            </Button>
+          )}
+          <Link to="/shop" className="text-center text-sm text-gray-600 hover:text-[#C75B2B] transition-colors py-2">
+            Continue Shopping â
+          </Link>
+        </div>
       </div>
     </div>
   )
