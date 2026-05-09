@@ -82,7 +82,7 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {collections.map(col => (
             <Link key={col.name} to={col.href} className="group relative aspect-[16/9] rounded-lg overflow-hidden bg-border-light">
-              <img src={col.image} alt={col.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+              <img src={col.image} alt={col.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
               <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors" />
               <div className="absolute bottom-6 left-6">
                 <h3 className="text-white font-bold text-lg">{col.name}</h3>
