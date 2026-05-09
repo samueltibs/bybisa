@@ -31,17 +31,17 @@ export default function ProductCard({ product }: ProductCardProps) {
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-5xl">
-              {product.category === 'template' ? 'ð' : product.category === 'guide' ? 'ð' : product.category === 'formula' ? 'ð' : product.category === 'course' ? 'ð' : 'ð¦'}
+              {product.category === 'template' ? 'Ã°ÂÂÂ' : product.category === 'guide' ? 'Ã°ÂÂÂ' : product.category === 'formula' ? 'Ã°ÂÂÂ' : product.category === 'course' ? 'Ã°ÂÂÂ' : 'Ã°ÂÂÂ¦'}
             </div>
           )}
 
           {/* Badges */}
           <div className="absolute top-3 left-3 flex gap-2">
             {product.compare_at_price && product.compare_at_price > product.price && (
-              <Badge variant="sale">Sale</Badge>
+              <Badge variant="accent">Sale</Badge>
             )}
             {product.is_featured && (
-              <Badge variant="featured">Get It Now</Badge>
+              <Badge variant="dark">Get It Now</Badge>
             )}
           </div>
 
@@ -58,7 +58,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           </button>
         </div>
 
-        {/* Info â minimal, left-aligned */}
+        {/* Info Ã¢ÂÂ minimal, left-aligned */}
         <div className="p-4">
           <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">
             {getCategoryLabel(product.category)}
