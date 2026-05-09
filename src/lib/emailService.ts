@@ -528,7 +528,7 @@ export async function sendReceipt(p: ReceiptParams) {
   const { data, error } = await resend.emails.send({
     from: BILLING_SENDER,
     to: p.customer_email,
-    reply_to: REPLY_TO,
+    replyTo: REPLY_TO,
     subject: `Your ByBisa receipt Ã¢ÂÂ ${p.order_number}`,
     html: buildReceiptHtml(p),
   })
@@ -540,7 +540,7 @@ export async function sendWelcome(p: WelcomeParams) {
   const { data, error } = await resend.emails.send({
     from: GENERAL_SENDER,
     to: p.customer_email,
-    reply_to: REPLY_TO,
+    replyTo: REPLY_TO,
     subject: `Welcome to ByBisa, ${p.customer_name}! \uD83D\uDCAA`,
     html: buildWelcomeHtml(p),
   })
@@ -552,7 +552,7 @@ export async function sendDownloadReminder(p: DownloadReminderParams) {
   const { data, error } = await resend.emails.send({
     from: GENERAL_SENDER,
     to: p.customer_email,
-    reply_to: REPLY_TO,
+    replyTo: REPLY_TO,
     subject: `Your ${p.product_title} is waiting for you \uD83D\uDCE6`,
     html: buildDownloadReminderHtml(p),
   })
@@ -564,7 +564,7 @@ export async function sendReviewRequest(p: ReviewRequestParams) {
   const { data, error } = await resend.emails.send({
     from: GENERAL_SENDER,
     to: p.customer_email,
-    reply_to: REPLY_TO,
+    replyTo: REPLY_TO,
     subject: `How\u2019s it going with ${p.product_title}? \u2B50`,
     html: buildReviewRequestHtml(p),
   })
@@ -580,7 +580,7 @@ export async function sendProductAnnouncement(p: ProductAnnouncementParams) {
       const { data, error } = await resend.emails.send({
         from: GENERAL_SENDER,
         to: email,
-        reply_to: REPLY_TO,
+        replyTo: REPLY_TO,
         subject: `\uD83D\uDD25 New drop: ${p.product_title} Ã¢ÂÂ ByBisa`,
         html,
       })
