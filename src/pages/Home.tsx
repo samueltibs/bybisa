@@ -31,7 +31,7 @@ export default function Home() {
     { q: 'What format are the digital products in?', a: 'Our products come in PDF, Excel (.xlsx), and PowerPoint formats depending on the product. All formats are clearly listed on each product page.' },
     { q: 'How do I access my purchase?', a: 'Immediately after payment, you will receive a download link on screen and via email. You can download your files up to 5 times.' },
     { q: 'Can I get a refund?', a: 'Yes! We offer a 30-day money-back guarantee. If you are not satisfied, contact us at bybisa@bisagroup.org.' },
-    { q: 'Are these products for beginners?', a: 'Absolutely. Our tools are designed for entrepreneurs at every stage Ã¢ÂÂ especially those just starting out who want to avoid costly mistakes.' },
+    { q: 'Are these products for beginners?', a: 'Absolutely. Our tools are designed for entrepreneurs at every stage ÃÂ¢ÃÂÃÂ especially those just starting out who want to avoid costly mistakes.' },
     { q: 'Do you offer bundles?', a: 'Yes! Check our Bundles collection to save on multiple products purchased together.' },
   ]
 
@@ -42,11 +42,11 @@ export default function Home() {
 
   return (
     <div>
-      {/* Hero Ã¢ÂÂ Dark full-width like bybisa.com */}
+      {/* Hero ÃÂ¢ÃÂÃÂ Dark full-width like bybisa.com */}
       <section className="relative bg-brand text-white overflow-hidden">
         <div className="absolute inset-0 opacity-20">
           <img 
-            src="https://www.bybisa.com/cdn/shop/files/COVERRRRRRR_LANDING.png?v=1767952742&width=3840" 
+            src="https://quwajhihoxhqoexbghth.supabase.co/storage/v1/object/public/bybisa-previews/images/hero-background.jpg" 
             alt="" 
             className="w-full h-full object-cover"
           />
@@ -57,7 +57,7 @@ export default function Home() {
           </h1>
           <p className="mt-6 text-base md:text-lg text-white/70 max-w-2xl mx-auto leading-relaxed">
             Digital tools, frameworks, and guides created to help you move from idea 
-            to execution Ã¢ÂÂ without confusion or overwhelm.
+            to execution ÃÂ¢ÃÂÃÂ without confusion or overwhelm.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-10">
             <Link to="/shop">
@@ -92,13 +92,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Brand Story Ã¢ÂÂ matching bybisa.com's layout */}
+      {/* Brand Story ÃÂ¢ÃÂÃÂ matching bybisa.com's layout */}
       <section className="bg-surface">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <img 
-                src="https://www.bybisa.com/cdn/shop/files/mmm.png?v=1770303139&width=1200" 
+                src="https://quwajhihoxhqoexbghth.supabase.co/storage/v1/object/public/bybisa-previews/images/brand-story.jpg" 
                 alt="By Bisa Brand Story" 
                 className="rounded-lg w-full"
               />
@@ -117,7 +117,7 @@ export default function Home() {
               <p className="text-text-muted leading-relaxed mb-6">
                 Five years ago, I sent $2,000 to what I thought was a legitimate supplier in China. 
                 Three months later? No products. No responses. No refund. That mistake could have 
-                ended everything Ã¢ÂÂ but instead, I decided to figure this out the right way.
+                ended everything ÃÂ¢ÃÂÃÂ but instead, I decided to figure this out the right way.
               </p>
               <Link to="/about">
                 <Button>
@@ -129,12 +129,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* What I Built! Ã¢ÂÂ Featured Products */}
+      {/* What I Built! ÃÂ¢ÃÂÃÂ Featured Products */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-extrabold text-brand">What I Built!</h2>
           <p className="text-text-muted mt-3 max-w-xl mx-auto">
-            Every tool, template, and framework was born from real experience Ã¢ÂÂ not theory.
+            Every tool, template, and framework was born from real experience ÃÂ¢ÃÂÃÂ not theory.
           </p>
         </div>
         <ProductGrid products={featured} loading={loading} />
@@ -147,7 +147,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Why Digital Tools Ã¢ÂÂ matching bybisa.com */}
+      {/* Why Digital Tools ÃÂ¢ÃÂÃÂ matching bybisa.com */}
       <section className="bg-brand text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20 text-center">
           <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40 mb-4">
