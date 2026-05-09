@@ -135,7 +135,7 @@ export default function PaymentCallback() {
         clearCart()
       }
     } else if (ref) {
-      // No tracking ID â check DB status
+      // No tracking ID Ã¢ÂÂ check DB status
       const { data } = await supabase
         .from('bybisa_purchases')
         .select('status')
@@ -181,7 +181,7 @@ export default function PaymentCallback() {
           {status === 'pending' && <Clock className="mx-auto w-16 h-16 text-amber-500 mb-4" />}
 
           <h1 className="text-2xl font-bold text-[#121212] mb-2">
-            {status === 'success' && 'Payment Confirmed! ð'}
+            {status === 'success' && 'Payment Confirmed! Ã°ÂÂÂ'}
             {status === 'failed' && 'Payment Failed'}
             {status === 'pending' && 'Payment Pending'}
           </h1>
@@ -226,12 +226,12 @@ export default function PaymentCallback() {
             </Link>
           )}
           {status === 'failed' && (
-            <Button onClick={() => window.history.back()} variant="primary" fullWidth>
+            <Button onClick={() => window.history.back()} variant="primary">
               Try Again
             </Button>
           )}
           <Link to="/shop" className="text-center text-sm text-gray-600 hover:text-[#C75B2B] transition-colors py-2">
-            Continue Shopping â
+            Continue Shopping Ã¢ÂÂ
           </Link>
         </div>
       </div>
