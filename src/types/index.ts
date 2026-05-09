@@ -6,6 +6,7 @@ export interface Product {
   short_description: string | null
   price: number
   compare_at_price: number | null
+  price_ugx: number | null
   currency: 'UGX' | 'USD'
   category: 'template' | 'guide' | 'formula' | 'course' | 'bundle'
   product_type: string | null
@@ -50,6 +51,11 @@ export interface Purchase {
   customer?: Customer
 }
 
+export interface CartItem {
+  product: Product
+  quantity: number
+}
+
 export interface Download {
   id: string
   purchase_id: string
@@ -77,14 +83,9 @@ export interface Coupon {
   min_order: number
   max_uses: number | null
   uses_count: number
-  expires_at: string | null
   is_active: boolean
+  expires_at: string | null
   created_at: string
-}
-
-export interface CartItem {
-  product: Product
-  quantity: number
 }
 
 export interface AnalyticsEvent {
