@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import type { Product, CartItem, Coupon } from '@/types'
+import { getProductPrice } from '@/lib/utils'
 
 interface CartContextType {
   items: CartItem[]
@@ -13,6 +14,8 @@ interface CartContextType {
   discount: number
   total: number
   currency: string
+  selectedCurrency: 'USD' | 'UGX'
+  setSelectedCurrency: (c: 'USD' | 'UGX') => void
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -27,6 +30,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   })
   const [coupon, setCoupon] = useState<Coupon | null>(null)
+  const [selectedCurrency, setSelectedCurrency] = useState<'USD' | 'UGX'>('UGX')
 
   useEffect(() => {
     localStorage.setItem('bybisa-cart', JSON.stringify(items))
@@ -58,25 +62,44 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setCoupon(null)
   }
 
-  const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
-  const currency = items[0]?.product.currency || 'UGX'
-  
+  // Compute subtotal in selectedCurrency
+  const subtotal = items.reduce(
+    (sum, item) => sum + getProductPrice(item.product, selectedCurrency) * item.quantity,
+    0
+  )
+
+  // The "native" currency for backwards compatibility (first item's currency, or selectedCurrency)
+  const currency = selectedCurrency
+
   let discount = 0
   if (coupon) {
     if (coupon.discount_type === 'percentage') {
       discount = subtotal * (coupon.discount_value / 100)
     } else {
-      discount = Math.min(coupon.discount_value, subtotal)
+      discount = coupon.discount_value
     }
   }
-  
+
   const total = Math.max(0, subtotal - discount)
 
   return (
-    <CartContext.Provider value={{
-      items, addItem, removeItem, updateQuantity, clearCart,
-      coupon, setCoupon, subtotal, discount, total, currency,
-    }}>
+    <CartContext.Provider
+      value={{
+        items,
+        addItem,
+        removeItem,
+        updateQuantity,
+        clearCart,
+        coupon,
+        setCoupon,
+        subtotal,
+        discount,
+        total,
+        currency,
+        selectedCurrency,
+        setSelectedCurrency,
+      }}
+    >
       {children}
     </CartContext.Provider>
   )
