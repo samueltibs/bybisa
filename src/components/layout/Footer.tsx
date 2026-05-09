@@ -52,18 +52,20 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-white/40">
-            &copy; {new Date().getFullYear()} Bisa Group LLC. All rights reserved.
+        {/* BisaStyles Cross-sell */}
+        <div className="mt-10 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <p className="text-sm text-white/50">
+            Looking for fashion?{' '}
+            <a
+              href="https://bisastyles.store"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/60 hover:text-[#C75B2B] transition-colors underline-offset-2 hover:underline"
+            >
+              Visit BisaStyles →
+            </a>
           </p>
-          <div className="flex gap-6">
-            <a href="mailto:bybisa@bisagroup.org" className="text-xs text-white/40 hover:text-white/70 transition-colors">
-              Contact
-            </a>
-            <a href="/about" className="text-xs text-white/40 hover:text-white/70 transition-colors">
-              About
-            </a>
-          </div>
+          <p className="text-xs text-white/30">© {new Date().getFullYear()} By Bisa. All rights reserved.</p>
         </div>
       </div>
     </footer>
