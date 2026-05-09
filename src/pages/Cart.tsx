@@ -2,14 +2,26 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Trash2, ShoppingBag, Tag, ArrowRight } from 'lucide-react'
 import { useCart } from '@/contexts/CartContext'
-import { formatPrice } from '@/lib/utils'
+import { formatPrice, getProductPrice } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 
 export default function Cart() {
   const navigate = useNavigate()
-  const { items, removeItem, subtotal, discount, total, currency, coupon, setCoupon, clearCart } = useCart()
+  const {
+    items,
+    removeItem,
+    subtotal,
+    discount,
+    total,
+    currency,
+    selectedCurrency,
+    setSelectedCurrency,
+    coupon,
+    setCoupon,
+    clearCart,
+  } = useCart()
   const [couponCode, setCouponCode] = useState('')
   const [couponLoading, setCouponLoading] = useState(false)
   const [couponError, setCouponError] = useState('')
@@ -56,98 +68,122 @@ export default function Cart() {
 
   if (items.length === 0) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-        <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <h2 className="font-heading text-2xl font-bold text-secondary mb-2">Your cart is empty</h2>
-        <p className="text-gray-500 mb-6">Browse our collection of digital products</p>
-        <Link to="/shop"><Button>Start Shopping</Button></Link>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-center px-4">
+        <ShoppingBag className="w-16 h-16 text-text-muted" />
+        <h2 className="text-xl font-bold">Your cart is empty</h2>
+        <p className="text-text-muted">Browse our collection of digital products</p>
+        <Button variant="primary" onClick={() => navigate('/shop')}>Start Shopping</Button>
       </div>
     )
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="font-heading text-3xl font-bold text-secondary mb-8">Shopping Cart</h1>
+    <div className="min-h-screen bg-surface py-10 px-4">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-2xl font-bold text-text mb-8">Shopping Cart</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Cart items */}
-        <div className="lg:col-span-2 space-y-4">
-          {items.map(item => (
-            <div key={item.product.id} className="bg-white rounded-xl border border-warm-border p-4 flex gap-4">
-              <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
-                {item.product.preview_image_url ? (
-                  <img src={item.product.preview_image_url} alt={item.product.title} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center text-2xl">
-                    ð
-                  </div>
-                )}
+        <div className="grid md:grid-cols-3 gap-8">
+          {/* Items */}
+          <div className="md:col-span-2 space-y-4">
+            {items.map(item => (
+              <div key={item.product.id} className="bg-white rounded-xl p-4 border border-border flex gap-4">
+                <div className="w-16 h-16 bg-surface-alt rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center text-2xl">
+                  {item.product.preview_image_url
+                    ? <img src={item.product.preview_image_url} alt={item.product.title} className="w-full h-full object-cover" />
+                    : (item.product.category === 'template' ? 'ð' : item.product.category === 'guide' ? 'ð' : 'ð¦')
+                  }
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-text text-sm line-clamp-2">{item.product.title}</p>
+                  <p className="text-xs text-text-muted mt-0.5">
+                    {item.product.file_type?.toUpperCase()} â¢ Digital Download
+                  </p>
+
+                  {/* Dual price per item */}
+                  {item.product.currency === 'USD' && item.product.price_ugx ? (
+                    <div className="mt-1">
+                      <span className="text-sm font-bold text-brand">{formatPrice(item.product.price, 'USD')}</span>
+                      <span className="text-xs text-text-muted ml-2">{formatPrice(item.product.price_ugx, 'UGX')}</span>
+                    </div>
+                  ) : (
+                    <p className="text-sm font-bold text-brand mt-1">
+                      {formatPrice(item.product.price, item.product.currency)}
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={() => removeItem(item.product.id)}
+                  className="p-1.5 text-gray-400 hover:text-red-500 transition-colors self-start"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
-              <div className="flex-1 min-w-0">
-                <Link to={`/products/${item.product.slug}`} className="font-semibold text-secondary hover:text-primary transition-colors line-clamp-2">
-                  {item.product.title}
-                </Link>
-                <p className="text-sm text-gray-500 mt-0.5">{item.product.file_type?.toUpperCase()} â¢ Digital Download</p>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="font-bold text-secondary">
-                    {formatPrice(item.product.price, item.product.currency)}
-                  </span>
+            ))}
+          </div>
+
+          {/* Summary */}
+          <div className="space-y-4">
+            <div className="bg-white rounded-xl p-5 border border-border">
+              <h3 className="font-bold text-text mb-4">Order Summary</h3>
+
+              {/* Currency toggle */}
+              <div className="mb-4">
+                <p className="text-xs text-text-muted uppercase tracking-wider mb-2">Pay in</p>
+                <div className="flex rounded-lg overflow-hidden border border-border">
                   <button
-                    onClick={() => removeItem(item.product.id)}
-                    className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
+                    onClick={() => setSelectedCurrency('UGX')}
+                    className={`flex-1 py-2 text-sm font-semibold transition-colors ${selectedCurrency === 'UGX' ? 'bg-brand text-white' : 'bg-white text-text-muted hover:bg-surface-alt'}`}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    UGX
+                  </button>
+                  <button
+                    onClick={() => setSelectedCurrency('USD')}
+                    className={`flex-1 py-2 text-sm font-semibold transition-colors ${selectedCurrency === 'USD' ? 'bg-brand text-white' : 'bg-white text-text-muted hover:bg-surface-alt'}`}
+                  >
+                    USD
                   </button>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
 
-        {/* Summary */}
-        <div className="bg-white rounded-xl border border-warm-border p-6 h-fit sticky top-24">
-          <h3 className="font-heading text-lg font-semibold text-secondary mb-4">Order Summary</h3>
-          
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-500">Subtotal ({items.length} item{items.length !== 1 ? 's' : ''})</span>
-              <span className="font-medium">{formatPrice(subtotal, currency)}</span>
-            </div>
-            
-            {coupon && (
-              <div className="flex justify-between text-green-600">
-                <span>Discount ({coupon.code})</span>
-                <span>-{formatPrice(discount, currency)}</span>
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-text-muted">Subtotal ({items.length} item{items.length !== 1 ? 's' : ''})</span>
+                <span className="font-medium">{formatPrice(subtotal, selectedCurrency)}</span>
               </div>
-            )}
-            
-            <div className="border-t border-warm-border pt-3 flex justify-between text-base font-bold">
-              <span>Total</span>
-              <span>{formatPrice(total, currency)}</span>
+
+              {coupon && (
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-text-muted">Discount ({coupon.code})</span>
+                  <span className="text-green-600 font-medium">-{formatPrice(discount, selectedCurrency)}</span>
+                </div>
+              )}
+
+              <div className="flex justify-between text-base font-bold border-t border-border pt-3 mt-3">
+                <span>Total</span>
+                <span>{formatPrice(total, selectedCurrency)}</span>
+              </div>
+
+              {/* Coupon */}
+              {!coupon && (
+                <div className="mt-4 space-y-2">
+                  <Input
+                    label="Coupon Code"
+                    value={couponCode}
+                    onChange={e => setCouponCode(e.target.value)}
+                    className="text-sm"
+                  />
+                  <Button variant="outline" size="sm" onClick={applyCoupon} loading={couponLoading} className="w-full">
+                    <Tag className="w-3.5 h-3.5" />
+                    Apply
+                  </Button>
+                  {couponError && <p className="text-xs text-red-500">{couponError}</p>}
+                </div>
+              )}
             </div>
+
+            <Button variant="primary" className="w-full" onClick={() => navigate('/checkout')}>
+              Proceed to Checkout <ArrowRight className="w-4 h-4" />
+            </Button>
           </div>
-
-          {/* Coupon */}
-          {!coupon && (
-            <div className="mt-4">
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Coupon code"
-                  value={couponCode}
-                  onChange={e => setCouponCode(e.target.value)}
-                  className="text-sm"
-                />
-                <Button size="sm" variant="outline" onClick={applyCoupon} loading={couponLoading}>
-                  <Tag className="w-4 h-4" />
-                </Button>
-              </div>
-              {couponError && <p className="text-xs text-red-500 mt-1">{couponError}</p>}
-            </div>
-          )}
-
-          <Button className="w-full mt-6" size="lg" onClick={() => navigate('/checkout')}>
-            Proceed to Checkout <ArrowRight className="w-4 h-4" />
-          </Button>
         </div>
       </div>
     </div>
