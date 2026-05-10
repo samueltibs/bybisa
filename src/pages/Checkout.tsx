@@ -127,7 +127,7 @@ export default function Checkout() {
         window.location.href = redirectUrl
       } catch (payErr) {
         console.error('PesaPal error:', payErr)
-        clearCart()
+
         navigate(`/payment-callback?ref=${purchases[0].order_number}&pending=true`)
       }
     } catch (err: any) {
@@ -216,13 +216,13 @@ export default function Checkout() {
                   onClick={() => setSelectedCurrency('UGX')}
                   className={`flex-1 py-3 text-sm font-semibold transition-colors ${selectedCurrency === 'UGX' ? 'bg-brand text-white' : 'bg-white text-text-muted hover:bg-surface-alt'}`}
                 >
-                  Ã°ÂÂÂºÃ°ÂÂÂ¬ UGX (Ugandan Shilling)
+                  UGX (Ugandan Shilling)
                 </button>
                 <button
                   onClick={() => setSelectedCurrency('USD')}
                   className={`flex-1 py-3 text-sm font-semibold transition-colors ${selectedCurrency === 'USD' ? 'bg-brand text-white' : 'bg-white text-text-muted hover:bg-surface-alt'}`}
                 >
-                  Ã°ÂÂÂºÃ°ÂÂÂ¸ USD (US Dollar)
+                  USD (US Dollar)
                 </button>
               </div>
               <p className="text-xs text-text-muted mt-2 text-center">
@@ -248,7 +248,7 @@ export default function Checkout() {
 
             <div className="flex items-center justify-center gap-2 text-xs text-text-muted">
               <Lock className="w-3 h-3" />
-              <span>Secured by PesaPal ÃÂ· Instant digital delivery</span>
+              <span>Secured by PesaPal - Instant digital delivery</span>
             </div>
           </div>
         </div>
