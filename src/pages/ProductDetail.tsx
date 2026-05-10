@@ -96,7 +96,7 @@ export default function ProductDetail() {
               <img src={product.preview_image_url} alt={product.title} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-8xl">
-                {product.category === 'template' ? 'ð' : product.category === 'guide' ? 'ð' : product.category === 'formula' ? 'ð' : product.category === 'course' ? 'ð' : 'ð¦'}
+                {product.category === 'template' ? 'Ã°ÂÂÂ' : product.category === 'guide' ? 'Ã°ÂÂÂ' : product.category === 'formula' ? 'Ã°ÂÂÂ' : product.category === 'course' ? 'Ã°ÂÂÂ' : 'Ã°ÂÂÂ¦'}
               </div>
             )}
           </div>
@@ -135,7 +135,7 @@ export default function ProductDetail() {
                   </div>
                   <p className="text-sm text-text-muted font-medium">
                     Also available at <span className="text-text font-semibold">{formatPrice(product.price_ugx!, 'UGX')}</span>
-                    &nbsp;â select your preferred currency at checkout
+                    &nbsp;-- select your preferred currency at checkout
                   </p>
                 </div>
               ) : (
@@ -215,7 +215,7 @@ export default function ProductDetail() {
                     <p className="text-sm text-text-muted mb-2">{review.review_text}</p>
                   }
                   <p className="text-xs text-text-muted">
-                    {(review as any).customer?.name || 'Customer'} Â· {new Date(review.created_at).toLocaleDateString()}
+                    {(review as any).customer?.name || 'Customer'} ÃÂ· {new Date(review.created_at).toLocaleDateString()}
                   </p>
                 </div>
               ))}
