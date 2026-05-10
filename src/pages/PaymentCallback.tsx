@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
-import { CheckCircle, XCircle, Download, Clock, ArrowRight } from 'lucide-react'
+import { CheckCircle, XCircle, Download, Clock, ArrowRight, ArrowLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { getAuthToken, getTransactionStatus } from '@/lib/pesapal'
 import { useCart } from '@/contexts/CartContext'
 import Button from '@/components/ui/Button'
 import Loading from '@/components/ui/Loading'
@@ -48,36 +47,31 @@ async function triggerReceiptEmail(orderNumber: string) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        customer_email: customer.email,
-        customer_name: customer.full_name || 'Entrepreneur',
-        order_number: purchase.order_number,
-        product_title: product?.title || 'Your Product',
-        amount: String(purchase.amount),
-        currency: purchase.currency || 'UGX',
-        payment_method: purchase.payment_method || 'PesaPal',
-        payment_reference: purchase.pesapal_tracking_id || '',
-        download_url: downloadUrl,
-        remaining_downloads: purchase.downloads_remaining ?? 5,
-        purchase_date: purchaseDate,
+        email: customer.email,
+        name: customer.full_name || 'Valued Customer',
+        orderNumber: purchase.order_number,
+        productTitle: product?.title || 'Your Purchase',
+        productCategory: product?.category || '',
+        amount: purchase.amount,
+        currency: purchase.currency,
+        downloadUrl,
+        purchaseDate,
       }),
     })
 
-    // Send welcome email for first-time buyers
+    // Send welcome email if first purchase (purchaseCount <= 1)
     if ((purchaseCount ?? 0) <= 1) {
       await fetch('/api/emails/send-welcome', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          customer_email: customer.email,
-          customer_name: customer.full_name || 'Entrepreneur',
-          product_title: product?.title || 'Your Product',
-          product_type: product?.category || 'template',
+          customerName: customer.full_name || 'Valued Customer',
+          customerEmail: customer.email,
         }),
       })
     }
   } catch (err) {
-    // Non-fatal: email errors should not break the payment flow
-    console.error('Email trigger failed:', err)
+    console.error('Failed to trigger receipt email:', err)
   }
 }
 
@@ -85,7 +79,7 @@ export default function PaymentCallback() {
   const [searchParams] = useSearchParams()
   const { clearCart } = useCart()
   const [status, setStatus] = useState<'loading' | 'success' | 'pending' | 'failed'>('loading')
-  const [purchases, setPurchases] = useState([])
+  const [purchases, setPurchases] = useState<any[]>([])
 
   const ref = searchParams.get('ref') || searchParams.get('pesapal_merchant_reference')
   const trackingId = searchParams.get('OrderTrackingId') || searchParams.get('pesapal_transaction_tracking_id')
@@ -105,8 +99,9 @@ export default function PaymentCallback() {
 
     if (trackingId) {
       try {
-        const token = await getAuthToken()
-        const txStatus = await getTransactionStatus(token, trackingId)
+        const apiRes = await fetch(`/api/pesapal/transaction-status?trackingId=${encodeURIComponent(trackingId)}`)
+        if (!apiRes.ok) throw new Error(`Transaction status check failed: ${apiRes.status}`)
+        const txStatus = await apiRes.json()
 
         if (txStatus.payment_status_description === 'Completed') {
           if (ref) {
@@ -114,13 +109,11 @@ export default function PaymentCallback() {
               .from('bybisa_purchases')
               .update({ status: 'paid', pesapal_tracking_id: trackingId, payment_method: txStatus.payment_method })
               .eq('order_number', ref)
-
-            // Trigger receipt + welcome emails
-            await triggerReceiptEmail(ref)
           }
           await loadPurchases(ref)
           setStatus('success')
           clearCart()
+          if (ref) await triggerReceiptEmail(ref)
         } else if (txStatus.payment_status_description === 'Failed') {
           setStatus('failed')
         } else {
@@ -129,21 +122,20 @@ export default function PaymentCallback() {
           clearCart()
         }
       } catch (err) {
-        console.error('Callback error:', err)
-        await loadPurchases(ref)
-        setStatus('pending')
-        clearCart()
+        console.error('Payment callback error:', err)
+        if (ref) {
+          const { data } = await supabase
+            .from('bybisa_purchases')
+            .select('status')
+            .eq('order_number', ref)
+            .single()
+          setStatus(data?.status === 'paid' ? 'success' : 'pending')
+        } else {
+          setStatus('failed')
+        }
       }
-    } else if (ref) {
-      // No tracking ID Ã¢ÂÂ check DB status
-      const { data } = await supabase
-        .from('bybisa_purchases')
-        .select('status')
-        .eq('order_number', ref)
-        .single()
-      setStatus(data?.status === 'paid' ? 'success' : 'pending')
-      await loadPurchases(ref)
-      clearCart()
+    } else {
+      setStatus('failed')
     }
   }
 
@@ -151,7 +143,7 @@ export default function PaymentCallback() {
     if (!orderRef) return
     const { data } = await supabase
       .from('bybisa_purchases')
-      .select('*, bybisa_products(title, file_type)')
+      .select('*, product:bybisa_products(title, slug, file_type, download_token)')
       .eq('order_number', orderRef)
     if (data) setPurchases(data as any)
   }
@@ -161,77 +153,81 @@ export default function PaymentCallback() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Loading />
-          <p className="mt-4 text-gray-600">Verifying your payment...</p>
+          <p className="mt-4 text-gray-500">Processing your payment...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#F9F9F9] flex items-center justify-center px-4 py-16">
-      <div className="max-w-lg w-full bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        {/* Status Header */}
-        <div className={`p-8 text-center ${
-          status === 'success' ? 'bg-green-50' :
-          status === 'failed' ? 'bg-red-50' :
-          'bg-amber-50'
-        }`}>
-          {status === 'success' && <CheckCircle className="mx-auto w-16 h-16 text-green-500 mb-4" />}
-          {status === 'failed' && <XCircle className="mx-auto w-16 h-16 text-red-500 mb-4" />}
-          {status === 'pending' && <Clock className="mx-auto w-16 h-16 text-amber-500 mb-4" />}
-
-          <h1 className="text-2xl font-bold text-[#121212] mb-2">
-            {status === 'success' && 'Payment Confirmed! Ã°ÂÂÂ'}
-            {status === 'failed' && 'Payment Failed'}
-            {status === 'pending' && 'Payment Pending'}
-          </h1>
-          <p className="text-gray-600">
-            {status === 'success' && 'Your purchase is confirmed. A receipt has been sent to your email.'}
-            {status === 'failed' && 'Your payment was not successful. Please try again.'}
-            {status === 'pending' && 'Your payment is being processed. We will email you once confirmed.'}
-          </p>
+    <div className="min-h-screen bg-[#F9F9F9] py-16">
+      <div className="max-w-lg mx-auto px-4 text-center">
+        {/* Status icon */}
+        <div className="mb-6">
+          {status === 'success' && <CheckCircle className="w-20 h-20 text-green-500 mx-auto" />}
+          {status === 'failed' && <XCircle className="w-20 h-20 text-red-500 mx-auto" />}
+          {status === 'pending' && <Clock className="w-20 h-20 text-yellow-500 mx-auto" />}
         </div>
 
-        {/* Purchases */}
-        {purchases.length > 0 && (
-          <div className="p-6 border-b border-gray-100">
-            <h2 className="font-semibold text-[#121212] mb-4">Your Purchase{purchases.length > 1 ? 's' : ''}</h2>
-            <div className="space-y-3">
-              {(purchases as any[]).map((purchase: any) => (
-                <div key={purchase.id} className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
-                  <div>
-                    <p className="font-medium text-[#121212] text-sm">{purchase.bybisa_products?.title}</p>
-                    <p className="text-xs text-gray-500">{purchase.order_number}</p>
-                  </div>
-                  {status === 'success' && purchase.download_token && (
-                    <Link
-                      to={`/download?token=${purchase.download_token}`}
-                      className="flex items-center gap-1.5 bg-[#C75B2B] text-white text-xs font-semibold px-4 py-2 rounded-full hover:bg-[#b34d21] transition-colors"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                      Download
-                    </Link>
-                  )}
+        <h1 className="text-3xl font-bold text-[#121212] mb-2">
+          {status === 'success' && 'Payment Successful!'}
+          {status === 'failed' && 'Payment Failed'}
+          {status === 'pending' && 'Payment Processing'}
+        </h1>
+
+        <p className="text-gray-500 mb-8">
+          {status === 'success' && 'A receipt has been sent to your email.'}
+          {status === 'failed' && 'Your payment was not successful. Please try again.'}
+          {status === 'pending' && 'Your payment is being verified. You will receive an email once confirmed.'}
+        </p>
+
+        {/* Downloads for successful payments */}
+        {status === 'success' && purchases.length > 0 && (
+          <div className="bg-white rounded-2xl p-6 mb-8 shadow-sm text-left">
+            <h2 className="text-lg font-semibold text-[#121212] mb-4">Your Downloads</h2>
+            {purchases.map(p => (
+              <div key={p.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                <div>
+                  <p className="font-medium text-[#121212]">{p.product?.title}</p>
+                  <p className="text-xs text-gray-400">Order: {p.order_number} Â· {p.product?.file_type?.toUpperCase()}</p>
                 </div>
-              ))}
-            </div>
+                <a
+                  href={`/download?token=${p.download_token}`}
+                  className="flex items-center gap-1 text-sm font-medium text-[#C75B2B] hover:underline"
+                >
+                  <Download className="w-4 h-4" />
+                  Download
+                </a>
+              </div>
+            ))}
           </div>
         )}
 
-        {/* Actions */}
-        <div className="p-6 flex flex-col gap-3">
-          {status === 'success' && (
-            <Link to="/my-purchases" className="flex items-center justify-center gap-2 w-full bg-[#121212] text-white font-semibold py-3 rounded-full hover:bg-gray-800 transition-colors">
-              View All My Purchases <ArrowRight className="w-4 h-4" />
+        {/* Pending order reference */}
+        {status === 'pending' && purchases.length > 0 && (
+          <div className="bg-white rounded-2xl p-4 mb-8 shadow-sm">
+            <p className="text-sm text-gray-500">Order Reference: <span className="font-mono font-medium text-[#121212]">{purchases[0]?.order_number}</span></p>
+          </div>
+        )}
+
+        {/* Failed retry button */}
+        {status === 'failed' && (
+          <div className="mb-8">
+            <Link to="/checkout">
+              <Button variant="primary" size="lg">Try Again</Button>
             </Link>
-          )}
-          {status === 'failed' && (
-            <Button onClick={() => window.history.back()} variant="primary">
-              Try Again
-            </Button>
-          )}
-          <Link to="/shop" className="text-center text-sm text-gray-600 hover:text-[#C75B2B] transition-colors py-2">
-            Continue Shopping Ã¢ÂÂ
+          </div>
+        )}
+
+        {/* Navigation */}
+        <div className="flex justify-center gap-6">
+          <Link to="/" className="flex items-center gap-2 text-sm text-gray-500 hover:text-[#121212] transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+            Continue Shopping
+          </Link>
+          <Link to="/purchases" className="flex items-center gap-2 text-sm font-medium text-[#C75B2B] hover:underline">
+            My Purchases
+            <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </div>
