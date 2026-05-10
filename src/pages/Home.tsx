@@ -31,7 +31,7 @@ export default function Home() {
     { q: 'What format are the digital products in?', a: 'Our products come in PDF, Excel (.xlsx), and PowerPoint formats depending on the product. All formats are clearly listed on each product page.' },
     { q: 'How do I access my purchase?', a: 'Immediately after payment, you will receive a download link on screen and via email. You can download your files up to 5 times.' },
     { q: 'Can I get a refund?', a: 'Yes! We offer a 30-day money-back guarantee. If you are not satisfied, contact us at bybisa@bisagroup.org.' },
-    { q: 'Are these products for beginners?', a: 'Absolutely. Our tools are designed for entrepreneurs at every stage ÃÂ¢ÃÂÃÂ especially those just starting out who want to avoid costly mistakes.' },
+    { q: 'Are these products for beginners?', a: 'Absolutely. Our tools are designed for entrepreneurs at every stage â especially those just starting out who want to avoid costly mistakes.' },
     { q: 'Do you offer bundles?', a: 'Yes! Check our Bundles collection to save on multiple products purchased together.' },
   ]
 
@@ -41,132 +41,153 @@ export default function Home() {
   ]
 
   return (
-    <div>
-      {/* Hero ÃÂ¢ÃÂÃÂ Dark full-width like bybisa.com */}
-      <section className="relative bg-brand text-white overflow-hidden">
-        <div className="absolute inset-0 opacity-20">
-          <img 
-            src="https://quwajhihoxhqoexbghth.supabase.co/storage/v1/object/public/bybisa-previews/images/hero-background.jpg" 
-            alt="" 
-            className="w-full h-full object-cover"
-          />
-        </div>
-        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-36 text-center">
-          <h1 className="text-3xl md:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight">
+    <div className="min-h-screen bg-[#F9F9F9]">
+
+      {/* Hero â Dark full-width */}
+      <section
+        className="relative w-full min-h-[85vh] flex items-center justify-center text-white overflow-hidden"
+        style={{
+          backgroundImage: `url('https://quwajhihoxhqoexbghth.supabase.co/storage/v1/object/public/bybisa-previews/images/hero-background.jpg')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-[#121212]/70" />
+        <div className="relative z-10 max-w-3xl mx-auto px-6 text-center">
+          <p className="text-sm uppercase tracking-[0.2em] text-[#C75B2B] font-semibold mb-4">By Bisa</p>
+          <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6">
             Build Your Fashion Business With Clarity & Intention
           </h1>
-          <p className="mt-6 text-base md:text-lg text-white/70 max-w-2xl mx-auto leading-relaxed">
-            Digital tools, frameworks, and guides created to help you move from idea 
-            to execution ÃÂ¢ÃÂÃÂ without confusion or overwhelm.
+          <p className="text-lg md:text-xl text-white/80 mb-8">
+            Digital tools, frameworks, and guides crafted for fashion entrepreneurs â from sourcing to scaling.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-10">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/shop">
-              <Button variant="secondary" size="lg" className="bg-white text-brand hover:bg-white/90 border-0">
-                Shop Digital Products
+              <Button size="lg" className="bg-[#C75B2B] hover:bg-[#a84a22] text-white px-8 rounded-full">
+                Shop All Products <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
-            <Link to="/about">
-              <Button variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/10 hover:text-white">
-                Learn About By Bisa
+            <Link to="/shop?category=bundle">
+              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 px-8 rounded-full">
+                View Bundles
               </Button>
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Shop by Collection */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
-        <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-text-muted mb-8">
-          Shop by collection
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {collections.map(col => (
-            <Link key={col.name} to={col.href} className="group relative aspect-[16/9] rounded-lg overflow-hidden bg-border-light">
-              <img src={col.image} alt={col.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors" />
-              <div className="absolute bottom-6 left-6">
-                <h3 className="text-white font-bold text-lg">{col.name}</h3>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Brand Story ÃÂ¢ÃÂÃÂ matching bybisa.com's layout */}
-      <section className="bg-surface">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <img 
-                src="https://quwajhihoxhqoexbghth.supabase.co/storage/v1/object/public/bybisa-previews/images/brand-story.jpg" 
-                alt="By Bisa Brand Story" 
-                className="rounded-lg w-full"
-              />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted mb-4">
-                BY BISA BRAND STORY
-              </p>
-              <h2 className="text-3xl md:text-4xl font-extrabold text-brand leading-tight">
-                I Lost <span className="text-accent">$2,000</span> on My First Supplier.
-              </h2>
-              <p className="text-xl font-semibold text-brand mt-2 mb-6">You Don't Have To.</p>
-              <p className="text-text-muted leading-relaxed mb-4">
-                Hi, I'm Esther. I help entrepreneurs build profitable businesses through systems, not guesswork.
-              </p>
-              <p className="text-text-muted leading-relaxed mb-6">
-                Five years ago, I sent $2,000 to what I thought was a legitimate supplier in China. 
-                Three months later? No products. No responses. No refund. That mistake could have 
-                ended everything ÃÂ¢ÃÂÃÂ but instead, I decided to figure this out the right way.
-              </p>
-              <Link to="/about">
-                <Button>
-                  Read The Full Story <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* What I Built! ÃÂ¢ÃÂÃÂ Featured Products */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-brand">What I Built!</h2>
-          <p className="text-text-muted mt-3 max-w-xl mx-auto">
-            Every tool, template, and framework was born from real experience ÃÂ¢ÃÂÃÂ not theory.
+      {/* Why ByBisa */}
+      <section className="py-20 bg-white">
+        <div className="max-w-6xl mx-auto px-6">
+          <h2 className="text-3xl font-bold text-center text-[#121212] mb-4">Why ByBisa?</h2>
+          <p className="text-center text-gray-500 mb-12 max-w-xl mx-auto">
+            We built the tools we wish we had when starting our fashion brand.
           </p>
-        </div>
-        <ProductGrid products={featured} loading={loading} />
-        <div className="text-center mt-10">
-          <Link to="/shop">
-            <Button variant="outline">
-              View All Products <ArrowRight className="w-4 h-4" />
-            </Button>
-          </Link>
-        </div>
-      </section>
-
-      {/* Why Digital Tools ÃÂ¢ÃÂÃÂ matching bybisa.com */}
-      <section className="bg-brand text-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20 text-center">
-          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40 mb-4">
-            WHY DIGITAL TOOLS?
-          </h2>
-          <p className="text-xl md:text-2xl font-semibold leading-relaxed mb-10">
-            Because I believe in systems over guesswork, structure over chaos, 
-            and profitable pricing over discounting yourself into a corner.
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { icon: Download, label: 'Instant Download' },
-              { icon: Shield, label: 'Secure Payment' },
-              { icon: Zap, label: 'Lifetime Access' },
-              { icon: RefreshCw, label: '30-Day Guarantee' },
-            ].map(item => (
-              <div key={item.label} className="text-center">
-                <item.icon className="w-6 h-6 mx-auto mb-2 text-white/70" strokeWidth={1.5} />
-                <p className="text-xs font-semibold uppercase tracking-wider text-white/70">{item.label}</p>
+              { icon: <Download className="h-6 w-6" />, title: 'Instant Download', desc: 'Get your files immediately after payment. No waiting, no shipping.' },
+              { icon: <Shield className="h-6 w-6" />, title: '30-Day Guarantee', desc: 'Not satisfied? We will refund you â no questions asked within 30 days.' },
+              { icon: <Zap className="h-6 w-6" />, title: 'Ready to Use', desc: 'Plug-and-play templates. Just open, customize, and go.' },
+            ].map((item) => (
+              <div key={item.title} className="flex flex-col items-center text-center p-6 rounded-2xl bg-[#F9F9F9]">
+                <div className="w-12 h-12 rounded-full bg-[#C75B2B]/10 flex items-center justify-center text-[#C75B2B] mb-4">
+                  {item.icon}
+                </div>
+                <h3 className="font-semibold text-[#121212] mb-2">{item.title}</h3>
+                <p className="text-gray-500 text-sm">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Products */}
+      <section className="py-20 bg-[#F9F9F9]">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex items-center justify-between mb-10">
+            <h2 className="text-3xl font-bold text-[#121212]">Featured Products</h2>
+            <Link to="/shop" className="text-[#C75B2B] font-medium hover:underline flex items-center gap-1">
+              View All <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="bg-white rounded-2xl h-72 animate-pulse" />
+              ))}
+            </div>
+          ) : (
+            <ProductGrid products={featured} />
+          )}
+        </div>
+      </section>
+
+      {/* Collections */}
+      <section className="py-20 bg-white">
+        <div className="max-w-6xl mx-auto px-6">
+          <h2 className="text-3xl font-bold text-[#121212] mb-10 text-center">Shop by Collection</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {collections.map((col) => (
+              <Link key={col.name} to={col.href} className="group relative overflow-hidden rounded-2xl h-64 block">
+                <img
+                  src={col.image}
+                  alt={col.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-[#121212]/50 group-hover:bg-[#121212]/40 transition-colors" />
+                <div className="absolute bottom-6 left-6">
+                  <h3 className="text-white text-xl font-bold">{col.name}</h3>
+                  <p className="text-white/70 text-sm flex items-center gap-1 mt-1">
+                    Shop now <ArrowRight className="h-3 w-3" />
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Brand Story */}
+      <section className="py-20 bg-[#121212] text-white">
+        <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+          <div>
+            <p className="text-[#C75B2B] text-sm uppercase tracking-widest font-semibold mb-3">Our Story</p>
+            <h2 className="text-3xl font-bold mb-6">Built by a Fashion Founder, for Fashion Founders</h2>
+            <p className="text-white/70 leading-relaxed mb-6">
+              ByBisa was born out of necessity. When building Bisa Styles, we spent hundreds of hours
+              creating spreadsheets, frameworks, and systems from scratch. Now we package the best of
+              those tools so you can skip the guesswork and focus on building your brand.
+            </p>
+            <Link to="/about">
+              <Button variant="outline" className="border-white text-white hover:bg-white/10 rounded-full">
+                Learn More <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+          <div className="rounded-2xl overflow-hidden h-80">
+            <img
+              src="https://quwajhihoxhqoexbghth.supabase.co/storage/v1/object/public/bybisa-previews/images/brand-story.jpg"
+              alt="Brand story"
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Social Proof */}
+      <section className="py-20 bg-white">
+        <div className="max-w-6xl mx-auto px-6">
+          <h2 className="text-3xl font-bold text-center text-[#121212] mb-12">What Founders Are Saying</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { quote: 'The pricing formula literally saved my business. I had no idea I was underpricing by 40%.', name: 'Amara K.', role: 'Womenswear Founder' },
+              { quote: 'I used the launch checklist for my pop-up and sold out in 3 hours. Worth every shilling.', name: 'Tendo M.', role: 'Streetwear Brand' },
+              { quote: 'Finally, tools made for African fashion entrepreneurs. The supplier sheet is everything.', name: 'Zuri N.', role: 'Accessories Designer' },
+            ].map((t) => (
+              <div key={t.name} className="bg-[#F9F9F9] rounded-2xl p-6">
+                <p className="text-gray-600 italic mb-4">"{t.quote}"</p>
+                <p className="font-semibold text-[#121212]">{t.name}</p>
+                <p className="text-gray-400 text-sm">{t.role}</p>
               </div>
             ))}
           </div>
@@ -174,45 +195,47 @@ export default function Home() {
       </section>
 
       {/* FAQ */}
-      <section className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
-        <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-text-muted mb-8 text-center">
-          Frequently Asked Questions
-        </h2>
-        <div className="space-y-0 divide-y divide-border">
-          {faqs.map((faq, i) => (
-            <div key={i}>
-              <button
-                onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                className="w-full flex items-center justify-between py-5 text-left"
-              >
-                <span className="font-semibold text-brand text-sm pr-4">{faq.q}</span>
-                <ChevronDown className={`w-4 h-4 text-text-muted flex-shrink-0 transition-transform ${openFaq === i ? 'rotate-180' : ''}`} />
-              </button>
-              {openFaq === i && (
-                <p className="text-sm text-text-muted pb-5 leading-relaxed">{faq.a}</p>
-              )}
-            </div>
-          ))}
+      <section className="py-20 bg-[#F9F9F9]">
+        <div className="max-w-2xl mx-auto px-6">
+          <h2 className="text-3xl font-bold text-center text-[#121212] mb-10">Frequently Asked Questions</h2>
+          <div className="space-y-2">
+            {faqs.map((faq, i) => (
+              <div key={i} className="bg-white rounded-2xl overflow-hidden">
+                <button
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  className="w-full flex items-center justify-between py-5 px-6 text-left"
+                >
+                  <span className="font-medium text-[#121212]">{faq.q}</span>
+                  <ChevronDown
+                    className={`h-5 w-5 text-gray-400 transition-transform ${openFaq === i ? 'rotate-180' : ''}`}
+                  />
+                </button>
+                {openFaq === i && (
+                  <div className="px-6 pb-5 text-gray-500 text-sm leading-relaxed">
+                    {faq.a}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 md:pb-20">
-        <div className="bg-brand rounded-lg p-10 md:p-16 text-center text-white">
-          <h2 className="text-2xl md:text-3xl font-extrabold mb-4">
-            Ready to Build Your Business the Right Way?
-          </h2>
-          <p className="text-white/60 max-w-xl mx-auto mb-8">
-            Get instant access to proven tools and frameworks that have helped entrepreneurs 
-            avoid costly mistakes and build profitable fashion businesses.
+      <section className="py-20 bg-[#C75B2B]">
+        <div className="max-w-3xl mx-auto px-6 text-center text-white">
+          <h2 className="text-3xl font-bold mb-4">Ready to Build Your Business the Right Way?</h2>
+          <p className="text-white/80 mb-8">
+            Join hundreds of fashion entrepreneurs using ByBisa tools to price, source, and launch with confidence.
           </p>
           <Link to="/shop">
-            <Button variant="secondary" size="lg" className="bg-white text-brand hover:bg-white/90 border-0">
-              Explore Digital Products <ArrowRight className="w-4 h-4" />
+            <Button size="lg" className="bg-white text-[#C75B2B] hover:bg-white/90 px-10 rounded-full font-semibold">
+              Browse All Products <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Link>
         </div>
       </section>
+
     </div>
   )
 }
