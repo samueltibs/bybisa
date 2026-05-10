@@ -44,7 +44,7 @@ export default function About() {
             </p>
             <p className="text-text-muted leading-relaxed mt-4">
               That mistake could have ended everything before it started. But instead of giving up, 
-              I decided to figure this out â the right way.
+              I decided to figure this out -- the right way.
             </p>
           </div>
 
@@ -85,7 +85,7 @@ export default function About() {
               The Turning Point
             </h2>
             <p className="text-text-muted leading-relaxed">
-              Once I had real systems in place â for sourcing, for pricing, for quality control â 
+              Once I had real systems in place -- for sourcing, for pricing, for quality control -- 
               my business transformed. I went from losing money to consistently profitable. 
               From guessing to knowing. From chaos to clarity.
             </p>
@@ -94,7 +94,7 @@ export default function About() {
               <em>"How do you price your products?"</em> <em>"Where do I even start?"</em>
             </p>
             <p className="text-text-muted leading-relaxed mt-4">
-              That's when I realized â the systems I built for myself could help others avoid 
+              That's when I realized -- the systems I built for myself could help others avoid 
               the same expensive mistakes.
             </p>
           </div>
