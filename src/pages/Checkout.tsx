@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Lock, CreditCard } from 'lucide-react'
 import { useCart } from '@/contexts/CartContext'
@@ -25,8 +25,13 @@ export default function Checkout() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  useEffect(() => {
+    if (items.length === 0) {
+      navigate('/cart')
+    }
+  }, [items, navigate])
+
   if (items.length === 0) {
-    navigate('/cart')
     return null
   }
 
@@ -211,13 +216,13 @@ export default function Checkout() {
                   onClick={() => setSelectedCurrency('UGX')}
                   className={`flex-1 py-3 text-sm font-semibold transition-colors ${selectedCurrency === 'UGX' ? 'bg-brand text-white' : 'bg-white text-text-muted hover:bg-surface-alt'}`}
                 >
-                  ðºð¬ UGX (Ugandan Shilling)
+                  Ã°ÂÂÂºÃ°ÂÂÂ¬ UGX (Ugandan Shilling)
                 </button>
                 <button
                   onClick={() => setSelectedCurrency('USD')}
                   className={`flex-1 py-3 text-sm font-semibold transition-colors ${selectedCurrency === 'USD' ? 'bg-brand text-white' : 'bg-white text-text-muted hover:bg-surface-alt'}`}
                 >
-                  ðºð¸ USD (US Dollar)
+                  Ã°ÂÂÂºÃ°ÂÂÂ¸ USD (US Dollar)
                 </button>
               </div>
               <p className="text-xs text-text-muted mt-2 text-center">
@@ -243,7 +248,7 @@ export default function Checkout() {
 
             <div className="flex items-center justify-center gap-2 text-xs text-text-muted">
               <Lock className="w-3 h-3" />
-              <span>Secured by PesaPal Â· Instant digital delivery</span>
+              <span>Secured by PesaPal ÃÂ· Instant digital delivery</span>
             </div>
           </div>
         </div>
