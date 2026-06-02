@@ -27,6 +27,7 @@ export default function Shop() {
       .from('bybisa_products')
       .select('*')
       .eq('is_active', true)
+      .eq('publish_status', 'published')
 
     if (category !== 'all') {
       query = query.eq('category', category)
