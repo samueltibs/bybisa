@@ -8,6 +8,8 @@ export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([])
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Product | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
   const [form, setForm] = useState({
     title: '', description: '', short_description: '', price: '', compare_at_price: '',
     currency: 'UGX', category: 'template', file_type: 'pdf', is_active: true, is_featured: false, tags: '',
@@ -22,6 +24,7 @@ export default function AdminProducts() {
 
   function openNew() {
     setEditing(null)
+    setError('')
     setForm({ title: '', description: '', short_description: '', price: '', compare_at_price: '',
       currency: 'UGX', category: 'template', file_type: 'pdf', is_active: true, is_featured: false, tags: '' })
     setShowForm(true)
@@ -29,9 +32,10 @@ export default function AdminProducts() {
 
   function openEdit(p: Product) {
     setEditing(p)
+    setError('')
     setForm({
       title: p.title, description: p.description || '', short_description: p.short_description || '',
-      price: p.price.toString(), compare_at_price: p.compare_at_price?.toString() || '',
+      price: String(p.price), compare_at_price: p.compare_at_price ? String(p.compare_at_price) : '',
       currency: p.currency, category: p.category, file_type: p.file_type || 'pdf',
       is_active: p.is_active, is_featured: p.is_featured, tags: (p.tags || []).join(', '),
     })
@@ -39,13 +43,25 @@ export default function AdminProducts() {
   }
 
   async function handleSave() {
-    const data = {
-      title: form.title,
-      slug: editing?.slug || generateSlug(form.title),
-      description: form.description || null,
-      short_description: form.short_description || null,
-      price: parseFloat(form.price) || 0,
-      compare_at_price: form.compare_at_price ? parseFloat(form.compare_at_price) : null,
+    if (!form.title.trim()) {
+      setError('Title is required')
+      return
+    }
+    if (!form.price || isNaN(Number(form.price)) || Number(form.price) < 0) {
+      setError('Valid price is required')
+      return
+    }
+
+    setSaving(true)
+    setError('')
+
+    const payload: Record<string, unknown> = {
+      title: form.title.trim(),
+      slug: editing?.slug || generateSlug(form.title.trim()),
+      description: form.description.trim() || null,
+      short_description: form.short_description.trim() || null,
+      price: Number(form.price),
+      compare_at_price: form.compare_at_price ? Number(form.compare_at_price) : null,
       currency: form.currency,
       category: form.category,
       file_type: form.file_type,
@@ -54,19 +70,46 @@ export default function AdminProducts() {
       tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
     }
 
-    if (editing) {
-      await supabase.from('bybisa_products').update(data).eq('id', editing.id)
-    } else {
-      await supabase.from('bybisa_products').insert(data)
-    }
+    try {
+      if (editing) {
+        const { error: updateErr } = await supabase
+          .from('bybisa_products')
+          .update(payload)
+          .eq('id', editing.id)
 
-    setShowForm(false)
-    loadProducts()
+        if (updateErr) {
+          setError('Failed to save: ' + updateErr.message)
+          setSaving(false)
+          return
+        }
+      } else {
+        const { error: insertErr } = await supabase
+          .from('bybisa_products')
+          .insert(payload)
+
+        if (insertErr) {
+          setError('Failed to create: ' + insertErr.message)
+          setSaving(false)
+          return
+        }
+      }
+
+      setShowForm(false)
+      setEditing(null)
+      await loadProducts()
+    } catch (err: any) {
+      setError('Unexpected error: ' + (err?.message || 'Please try again'))
+    }
+    setSaving(false)
   }
 
   async function handleDelete(id: string) {
     if (!confirm('Delete this product?')) return
-    await supabase.from('bybisa_products').delete().eq('id', id)
+    const { error: delErr } = await supabase.from('bybisa_products').delete().eq('id', id)
+    if (delErr) {
+      alert('Failed to delete: ' + delErr.message)
+      return
+    }
     loadProducts()
   }
 
@@ -82,7 +125,6 @@ export default function AdminProducts() {
         </button>
       </div>
 
-      {/* Product list */}
       <div className="bg-surface border border-border rounded-lg overflow-hidden">
         <table className="w-full text-sm">
           <thead>
@@ -101,7 +143,7 @@ export default function AdminProducts() {
                 <td className="px-4 py-3 text-text-muted uppercase text-xs tracking-wider">{p.category}</td>
                 <td className="px-4 py-3 font-semibold">{formatPrice(p.price, p.currency)}</td>
                 <td className="px-4 py-3">
-                  <span className={`text-[10px] font-bold uppercase tracking-wider ${p.is_active ? 'text-success' : 'text-text-light'}`}>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${p.is_active ? 'text-green-700' : 'text-text-light'}`}>
                     {p.is_active ? 'Active' : 'Draft'}
                   </span>
                 </td>
@@ -111,38 +153,92 @@ export default function AdminProducts() {
                 </td>
               </tr>
             ))}
+            {products.length === 0 && (
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-text-light">No products yet</td></tr>
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* Form modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-surface rounded-lg border border-border w-full max-w-lg max-h-[85vh] overflow-y-auto p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-extrabold text-brand">{editing ? 'Edit Product' : 'New Product'}</h2>
-              <button onClick={() => setShowForm(false)}><X className="w-5 h-5 text-text-muted" /></button>
+              <button onClick={() => { setShowForm(false); setError('') }}><X className="w-5 h-5 text-text-muted" /></button>
             </div>
+
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+                {error}
+              </div>
+            )}
+
             <div className="space-y-4">
-              <div><label className={labelClass}>Title</label><input className={inputClass} value={form.title} onChange={e => setForm(f => ({...f, title: e.target.value}))} /></div>
-              <div><label className={labelClass}>Short Description</label><input className={inputClass} value={form.short_description} onChange={e => setForm(f => ({...f, short_description: e.target.value}))} /></div>
-              <div><label className={labelClass}>Description</label><textarea rows={4} className={inputClass} value={form.description} onChange={e => setForm(f => ({...f, description: e.target.value}))} /></div>
+              <div>
+                <label className={labelClass}>Title *</label>
+                <input className={inputClass} value={form.title} onChange={e => setForm(f => ({...f, title: e.target.value}))} placeholder="Product title" />
+              </div>
+              <div>
+                <label className={labelClass}>Short Description</label>
+                <input className={inputClass} value={form.short_description} onChange={e => setForm(f => ({...f, short_description: e.target.value}))} placeholder="Brief one-liner" />
+              </div>
+              <div>
+                <label className={labelClass}>Description</label>
+                <textarea rows={4} className={inputClass} value={form.description} onChange={e => setForm(f => ({...f, description: e.target.value}))} placeholder="Full product description" />
+              </div>
               <div className="grid grid-cols-2 gap-4">
-                <div><label className={labelClass}>Price</label><input type="number" className={inputClass} value={form.price} onChange={e => setForm(f => ({...f, price: e.target.value}))} /></div>
-                <div><label className={labelClass}>Compare At Price</label><input type="number" className={inputClass} value={form.compare_at_price} onChange={e => setForm(f => ({...f, compare_at_price: e.target.value}))} /></div>
+                <div>
+                  <label className={labelClass}>Price *</label>
+                  <input type="number" step="0.01" min="0" className={inputClass} value={form.price} onChange={e => setForm(f => ({...f, price: e.target.value}))} placeholder="0" />
+                </div>
+                <div>
+                  <label className={labelClass}>Compare At Price</label>
+                  <input type="number" step="0.01" min="0" className={inputClass} value={form.compare_at_price} onChange={e => setForm(f => ({...f, compare_at_price: e.target.value}))} placeholder="Original price" />
+                </div>
               </div>
               <div className="grid grid-cols-3 gap-4">
-                <div><label className={labelClass}>Currency</label><select className={inputClass} value={form.currency} onChange={e => setForm(f => ({...f, currency: e.target.value}))}><option value="UGX">UGX</option><option value="USD">USD</option></select></div>
-                <div><label className={labelClass}>Category</label><select className={inputClass} value={form.category} onChange={e => setForm(f => ({...f, category: e.target.value}))}><option value="template">Template</option><option value="guide">Guide</option><option value="formula">Formula</option><option value="course">Course</option><option value="bundle">Bundle</option></select></div>
-                <div><label className={labelClass}>File Type</label><select className={inputClass} value={form.file_type} onChange={e => setForm(f => ({...f, file_type: e.target.value}))}><option value="pdf">PDF</option><option value="xlsx">XLSX</option><option value="docx">DOCX</option><option value="zip">ZIP</option><option value="pptx">PPTX</option></select></div>
+                <div>
+                  <label className={labelClass}>Currency</label>
+                  <select className={inputClass} value={form.currency} onChange={e => setForm(f => ({...f, currency: e.target.value}))}>
+                    <option value="UGX">UGX</option><option value="USD">USD</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>Category</label>
+                  <select className={inputClass} value={form.category} onChange={e => setForm(f => ({...f, category: e.target.value}))}>
+                    <option value="template">Template</option><option value="guide">Guide</option>
+                    <option value="formula">Formula</option><option value="course">Course</option>
+                    <option value="bundle">Bundle</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>File Type</label>
+                  <select className={inputClass} value={form.file_type} onChange={e => setForm(f => ({...f, file_type: e.target.value}))}>
+                    <option value="pdf">PDF</option><option value="xlsx">XLSX</option>
+                    <option value="docx">DOCX</option><option value="zip">ZIP</option>
+                    <option value="pptx">PPTX</option>
+                  </select>
+                </div>
               </div>
-              <div><label className={labelClass}>Tags (comma separated)</label><input className={inputClass} value={form.tags} onChange={e => setForm(f => ({...f, tags: e.target.value}))} /></div>
-              <div className="flex gap-4">
-                <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.is_active} onChange={e => setForm(f => ({...f, is_active: e.target.checked}))} /> Active</label>
-                <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.is_featured} onChange={e => setForm(f => ({...f, is_featured: e.target.checked}))} /> Featured</label>
+              <div>
+                <label className={labelClass}>Tags (comma separated)</label>
+                <input className={inputClass} value={form.tags} onChange={e => setForm(f => ({...f, tags: e.target.value}))} placeholder="sourcing, pricing, beginner" />
               </div>
-              <button onClick={handleSave} className="w-full px-4 py-3 bg-brand text-white rounded-full text-xs font-semibold uppercase tracking-wider hover:bg-brand-light">
-                {editing ? 'Update Product' : 'Create Product'}
+              <div className="flex gap-6">
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input type="checkbox" checked={form.is_active} onChange={e => setForm(f => ({...f, is_active: e.target.checked}))} className="rounded" /> Active
+                </label>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input type="checkbox" checked={form.is_featured} onChange={e => setForm(f => ({...f, is_featured: e.target.checked}))} className="rounded" /> Featured
+                </label>
+              </div>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="w-full px-4 py-3 bg-brand text-white rounded-full text-xs font-semibold uppercase tracking-wider hover:bg-brand-light disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {saving ? 'Saving...' : editing ? 'Save Changes' : 'Create Product'}
               </button>
             </div>
           </div>
