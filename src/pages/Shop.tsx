@@ -3,23 +3,20 @@ import { useSearchParams } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import type { Product } from '@/types'
 import ProductGrid from '@/components/products/ProductGrid'
-import CategoryFilter from '@/components/products/CategoryFilter'
 import SearchBar from '@/components/products/SearchBar'
 
 type SortOption = 'newest' | 'price-asc' | 'price-desc' | 'popular'
 
 export default function Shop() {
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams] = useSearchParams()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState<SortOption>('newest')
-  
-  const category = searchParams.get('category') || 'all'
 
   useEffect(() => {
     loadProducts()
-  }, [category, sort])
+  }, [sort])
 
   async function loadProducts() {
     setLoading(true)
@@ -29,8 +26,9 @@ export default function Shop() {
       .eq('is_active', true)
       .eq('publish_status', 'published')
 
-    if (category !== 'all') {
-      query = query.eq('category', category)
+    const collection = searchParams.get('collection')
+    if (collection) {
+      query = query.eq('collection_id', collection)
     }
 
     switch (sort) {
@@ -75,17 +73,6 @@ export default function Shop() {
           <option value="price-desc">Price: High to Low</option>
           <option value="popular">Popular</option>
         </select>
-      </div>
-
-      <div className="mb-8">
-        <CategoryFilter
-          selected={category}
-          onChange={cat => {
-            if (cat === 'all') searchParams.delete('category')
-            else searchParams.set('category', cat)
-            setSearchParams(searchParams)
-          }}
-        />
       </div>
 
       <p className="text-xs text-text-light uppercase tracking-wider mb-6">
