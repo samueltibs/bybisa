@@ -63,3 +63,15 @@ export function getCategoryIcon(category: string): string {
   }
   return icons[category] || 'file'
 }
+
+
+export function getProductPrice(product: { price: number; currency: string; price_ugx?: number | null }, selectedCurrency: 'USD' | 'UGX'): number {
+  if (selectedCurrency === 'UGX') {
+    if (product.currency === 'UGX') return product.price
+    if (product.price_ugx) return product.price_ugx
+    return convertToUGX(product.price)
+  } else {
+    if (product.currency === 'USD') return product.price
+    return convertToUSD(product.price)
+  }
+}
